@@ -6,7 +6,7 @@
 
 #include <pqxx/pqxx>
 
-#include "../../cmake-build-release/_deps/spdlog-src/include/spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 #include "core/errors/validation_exception.h"
 
 namespace helpers {
