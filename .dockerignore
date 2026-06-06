@@ -1,0 +1,10 @@
+# .dockerignore
+.git
+.gitignore
+*.md
+.vscode/
+.idea/
+build/
+*.log
+*.tmp
+*.swp

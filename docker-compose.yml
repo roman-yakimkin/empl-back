@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: empl_postgres
+    environment:
+      POSTGRES_USER: emplcpp
+      POSTGRES_PASSWORD: emplcpp
+      POSTGRES_DB: empldb
+    ports:
+      - "5432:5432"  # для локального подключения, в prod лучше убрать
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U emplcpp -d empldb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_net
+
+  # Сервис для применения миграций (запускается один раз при деплое)
+  dbmate-migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dbmate # Dockerfile.dbmate для микросервиса
+    container_name: empl_dbmate
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://emplcpp:emplcpp@postgres:5432/empldb?sslmode=disable}
+    volumes:
+      - ./db:/db  # монтируем папку с миграциями
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["--wait", "up"]  # ждём БД и применяем миграции
+    networks:
+      - app_net
+
+  # Mикросервис
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app  # Dockerfile.dbmate для микросервиса
+    container_name: empl_service
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=emplcpp
+      - DB_PASSWORD=emplcpp
+      - DB_NAME=empldb
+    depends_on:
+      dbmate-migrate:
+        condition: service_completed_successfully  # миграции перед запуском
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:${SERVER_PORT:-8080}/health || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - app_net
+
+  # контейнер для тестирования
+  app-tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.tests
+    container_name: empl_tests
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=emplcpp
+      - DB_PASSWORD=emplcpp
+      - DB_NAME=empldb_test
+      - SERVER_HOST=localhost
+      - SERVER_PORT=8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_net
+
+volumes:
+  postgres_data:
+
+networks:
+  app_net:
+    driver: bridge

@@ -1,0 +1,21 @@
+# Этап 1: берём конкретную версию dbmate из GHCR
+# Последняя стабильная: v2.22.0 (апрель 2026)
+FROM ghcr.io/amacneil/dbmate:2.22.0 AS dbmate
+
+# Этап 2: минимальный Alpine-образ с postgresql-client для pg_dump
+# PostgreSQL 15 на Alpine 3.19 — последняя патч-версия для 15-й ветки
+FROM postgres:15-alpine3.19
+
+# Копируем бинарник dbmate из первого этапа
+COPY --from=dbmate /usr/local/bin/dbmate /usr/local/bin/dbmate
+
+# Устанавливаем postgresql-client для экспорта schema.sql через pg_dump
+# Версия пакета соответствует Alpine 3.23
+RUN apk add --no-cache postgresql15-client
+
+# Создаём рабочую директорию для миграций
+WORKDIR /
+
+# По умолчанию: ждём доступности БД и применяем миграции
+ENTRYPOINT ["/usr/local/bin/dbmate"]
+#CMD ["--wait", "up"]
