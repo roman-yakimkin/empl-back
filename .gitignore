@@ -46,7 +46,6 @@ Thumbs.db
 *.dll
 *.exe
 *.out
-*.app
 
 Testing/
 *.log
