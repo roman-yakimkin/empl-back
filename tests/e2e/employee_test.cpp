@@ -13,7 +13,7 @@
 
 class E2E_EmployeeTest : public db_test, public ::testing::Test {
 protected:
-    const std::string BASE_URL = "http://localhost:" + helpers::get_env("SERVER_PORT", "8080");
+    const std::string BASE_URL = "http://" + helpers::get_env("SERVER_HOST", "app-e2e-test") + ":" + helpers::get_env("SERVER_PORT", "8080");
     std::unique_ptr<httplib::Client> cli;
 
     void SetUp() override {

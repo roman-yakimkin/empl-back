@@ -146,7 +146,7 @@ TEST_F(PositionServiceTest, Del_ThrowsValidateException) {
 
 
 TEST(PositionServiceConstructorTest, NullRepo_Throws) {
-    auto logger = spdlog::create<spdlog::sinks::null_sink_st>("tmp_logger");
+    auto logger = spdlog::create<spdlog::sinks::null_sink_st>("tmp_logger_1");
 
     EXPECT_THROW(
         svc::position_service(nullptr, logger.get()),

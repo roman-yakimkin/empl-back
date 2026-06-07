@@ -1,3 +1,6 @@
+# ==========================================
+# ЭТАП 1: Сборка (Builder)
+# ==========================================
 FROM gcc:11.5-bullseye AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libasio-dev \
     binutils \
+    libpqxx-dev \
     && rm -rf /var/lib/apt/lists/* \
     && cmake --version
 
@@ -19,21 +23,32 @@ COPY . .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTS=ON \
     && cmake --build build --target empl_back_tests -j$(nproc)
 
-# Runtime для тестов
+# ==========================================
+# ЭТАП 2: Выполнение (Runtime)
+# ==========================================
 FROM debian:bookworm-slim
 
+# Устанавливаем ТОЛЬКО необходимые библиотеки для запуска
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    libpqxx-6.4 \
+    libbrotli1 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 
-# Копируем только собранный бинарник тестов
+# Копируем только собранный бинарник тестов из этапа builder
 COPY --from=builder /build/build/empl_back_tests /build/
 
-ENV SERVER_HOST=localhost
-ENV SERVER_PORT=8080
+# Дефолтные переменные (будут корректно переопределены docker-compose.yml)
+ENV SERVER_HOST=app-test
+ENV SERVER_PORT=8090
+ENV DB_HOST=postgres
+ENV DB_PORT=5432
+ENV DB_USER=emplcpp
+ENV DB_PASSWORD=emplcpp
+ENV DB_NAME=empldb_test
 
 # Запускаем тесты напрямую
 CMD ["/build/empl_back_tests", "--gtest_color=yes", "--gtest_brief=1"]

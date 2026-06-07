@@ -133,6 +133,8 @@ if (ENABLE_TESTS)
             tests/helpers/db_test.cpp
     )
 
+    find_library(ANL_LIBRARY NAMES anl)
+
     target_link_libraries(empl_back_tests
             PRIVATE
             GTest::gtest_main
@@ -144,6 +146,10 @@ if (ENABLE_TESTS)
             Threads::Threads
             spdlog::spdlog
     )
+
+    if(ANL_LIBRARY)
+        target_link_libraries(empl_back_tests PRIVATE ${ANL_LIBRARY})
+    endif()
 
     target_include_directories(empl_back_tests PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src

@@ -17,6 +17,8 @@ void db_test::set_up() {
     test_logger = spdlog::stdout_color_mt("test_logger");
     test_logger->set_level(spdlog::level::debug);
 
+    db_lock = std::unique_lock(get_db_mutex());
+
     prepare_data();
 }
 

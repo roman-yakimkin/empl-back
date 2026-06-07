@@ -31,7 +31,6 @@ protected:
         pqxx::work tx(conn);
 
         try {
-            tx.exec("drop table if exists positions");
             tx.exec(R"(
                 create table positions (
                     id serial primary key,

@@ -62,6 +62,30 @@ services:
     networks:
       - app_net
 
+  # Микросервис для тестов (подключен к empldb_test, слушает на 8090)
+  app-e2e-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+    container_name: empl_e2e_test
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=emplcpp
+      - DB_PASSWORD=emplcpp
+      - DB_NAME=empldb_test
+      - SERVER_PORT=8090  # Микросервис для тестов слушает на 8090
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:${SERVER_PORT:-8090}/health || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_net
+
   # контейнер для тестирования
   app-tests:
     build:
@@ -74,10 +98,10 @@ services:
       - DB_USER=emplcpp
       - DB_PASSWORD=emplcpp
       - DB_NAME=empldb_test
-      - SERVER_HOST=localhost
-      - SERVER_PORT=8080
+      - SERVER_HOST=app-e2e-test
+      - SERVER_PORT=8090
     depends_on:
-      postgres:
+      app-e2e-test:
         condition: service_healthy
     networks:
       - app_net

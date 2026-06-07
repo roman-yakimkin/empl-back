@@ -31,7 +31,6 @@ protected:
         pqxx::work tx(conn);
 
         try {
-            tx.exec("drop table if exists departments");
             tx.exec(R"(
                 create table departments (
                     id serial primary key,
