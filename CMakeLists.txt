@@ -82,6 +82,18 @@ if (ENABLE_TESTS)
             GIT_TAG v1.17.0
     )
 
+    # Отключаем OpenSSL, так как для локальных E2E тестов нам нужен только обычный HTTP
+    set(HTTPLIB_REQUIRE_OPENSSL OFF CACHE BOOL "" FORCE)
+    # Включаем режим компиляции (быстрее и безопаснее, чем header-only)
+    set(HTTPLIB_COMPILE ON CACHE BOOL "" FORCE)
+
+    FetchContent_Declare(
+            httplib
+            GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+            GIT_TAG v0.46.1
+    )
+    FetchContent_MakeAvailable(httplib)
+
     # Для Windows:
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
@@ -117,12 +129,15 @@ if (ENABLE_TESTS)
             tests/integration/employee_repo_test.cpp
             tests/unit/employee_svc_test.cpp
             tests/unit/employee_ctrl_test.cpp
+            tests/e2e/employee_test.cpp
+            tests/helpers/db_test.cpp
     )
 
     target_link_libraries(empl_back_tests
             PRIVATE
             GTest::gtest_main
             GTest::gmock
+            httplib::httplib
             Crow::Crow
             nlohmann_json::nlohmann_json
             libpqxx::pqxx
