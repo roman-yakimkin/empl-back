@@ -9,6 +9,7 @@
 
 namespace core {
     class data_access_exception : public std::runtime_error {
+    protected:
         std::exception_ptr _cause;
     public:
         data_access_exception(const std::string& msg, std::exception_ptr _cause = nullptr)

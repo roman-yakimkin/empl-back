@@ -6,6 +6,7 @@
 #include <pqxx/pqxx>
 
 #include "core/errors/data_access_exception.h"
+#include "core/errors/duplicate_entry_exception.h"
 #include "helpers/pqxx.h"
 
 namespace repo {
@@ -88,6 +89,10 @@ namespace repo {
             logger->debug("Department created successfully");
 
             return {id, d.name};
+        }
+        catch (const pqxx::unique_violation& e) {
+            logger->warn("Unique constraint violation for department name '{}': {}", d.name, e.what());
+            throw core::duplicate_entry_exception("Unique constraint violation for department name", std::current_exception());
         }
         catch (const pqxx::unexpected_rows& e) {
             logger->warn("insert returned no rows: {}", e.what());

@@ -3,6 +3,8 @@
 //
 
 #include "position_service.h"
+
+#include "core/errors/duplicate_entry_exception.h"
 #include "core/errors/validation_exception.h"
 
 namespace svc {
@@ -14,22 +16,27 @@ namespace svc {
         return repo->get_all();
     }
 
-    core::position position_service::create(const core::position &dep) {
-        if (dep.name.empty()) {
+    core::position position_service::create(const core::position &pos) {
+        if (pos.name.empty()) {
             logger->warn("Validation failed: position name is empty");
             throw core::validation_exception("name", "Название должности не может быть пустым");
         }
 
-        return repo->create(dep);
+        try {
+            return repo->create(pos);
+        }
+        catch (core::duplicate_entry_exception& e) {
+            throw core::validation_exception("name", "Уже есть должность с таким названием");
+        }
     }
 
-    std::optional<core::position> position_service::update(int id, const core::position &dep) {
-        if (dep.name.empty()) {
+    std::optional<core::position> position_service::update(int id, const core::position &pos) {
+        if (pos.name.empty()) {
             logger->warn("Validation failed: position name is empty");
             throw core::validation_exception("name", "Название должности не может быть пустым");
         }
 
-        return repo->update(id, dep);
+        return repo->update(id, pos);
     }
 
     bool position_service::del(const int id) {

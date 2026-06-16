@@ -21,8 +21,8 @@ namespace svc {
 
         [[nodiscard]] std::optional<core::position> get_one(int id) const override;
         [[nodiscard]] std::map<int, core::position> get_all() const override;
-        core::position create(const core::position& dep) override;
-        std::optional<core::position> update(int id, const core::position& dep) override;
+        core::position create(const core::position& pos) override;
+        std::optional<core::position> update(int id, const core::position& pos) override;
         bool del(int id) override;
     };
 } // svc

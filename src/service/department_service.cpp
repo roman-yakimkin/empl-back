@@ -3,6 +3,8 @@
 //
 
 #include "department_service.h"
+
+#include "core/errors/duplicate_entry_exception.h"
 #include "core/errors/validation_exception.h"
 
 namespace svc {
@@ -20,7 +22,12 @@ namespace svc {
             throw core::validation_exception("name", "Название отдела не может быть пустым");
         }
 
-        return repo->create(dep);
+        try {
+            return repo->create(dep);
+        }
+        catch (core::duplicate_entry_exception& e) {
+            throw core::validation_exception("name", "Уже есть отдел с таким названием");
+        }
     }
 
     std::optional<core::department> department_service::update(int id, const core::department &dep) {
